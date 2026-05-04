@@ -422,24 +422,24 @@ body{font-family:'Inter',sans-serif;background:var(--navy-deep);color:var(--text
     </div>
 
     <!-- LEADS -->
-   <div class="page" id="page-leads">
-
-  <div style="margin-bottom:10px;">
-    <button onclick="loadLeads()">🔄 Atualizar Leads</button>
-  </div>
-
-  <table border="1" width="100%">
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Telefone</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="leads-tbody"></tbody>
-  </table>
-
-</div>
+    <div class="page" id="page-leads">
+      <div class="search-row">
+        <div class="sw"><span class="si-pos">🔍</span><input type="text" class="s-inp" id="search-lead" placeholder="Buscar lead..." oninput="filterLeads()"></div>
+        <div class="vtog">
+          <button class="vb active" onclick="setView('kanban',this)">Kanban</button>
+          <button class="vb" onclick="setView('lista',this)">Lista</button>
+        </div>
+        <select class="fsel" id="filter-corr" onchange="filterLeads()"><option value="">Todos corretores</option></select>
+        <select class="fsel" id="filter-status" onchange="filterLeads()">
+          <option value="">Todos status</option>
+          <option>Lead Novo</option><option>Primeiro Contato</option><option>Em Atendimento</option>
+          <option>Qualificado</option><option>Visita Marcada</option><option>Proposta</option>
+          <option>Documentação</option><option>Fechado</option><option>Perdido</option>
+        </select>
+      </div>
+      <div id="leads-kanban"><div class="kanban-wrap" id="kanban-board"></div></div>
+      <div id="leads-lista" style="display:none"><div class="tw2"><table class="ltable"><thead><tr><th>Nome</th><th>Telefone</th><th>Interesse</th><th>Tipo</th><th>Valor</th><th>Origem</th><th>Corretor</th><th>Status</th><th>Ações</th></tr></thead><tbody id="leads-tbody"></tbody></table></div></div>
+    </div>
 
     <!-- WHATSAPP -->
     <div class="page" id="page-whatsapp">
@@ -1246,42 +1246,7 @@ window.addEventListener('load', () => {
 });
 document.addEventListener('click', e => {
   if(e.target.classList.contains('modal-ov')) e.target.classList.remove('open');
-});const supabaseUrl = "SUA_URL";
-const supabaseKey = "SUA_KEY";
-
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-// 🔥 CARREGA LEADS
-async function loadLeads() {
-  const { data, error } = await supabase
-    .from("leads")
-    .select("*");
-
-  if (error) {
-    console.error("Erro ao buscar:", error);
-    return;
-  }
-
-  console.log("Leads:", data);
-
-  const tbody = document.getElementById("leads-tbody");
-  tbody.innerHTML = "";
-
-  data.forEach(lead => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${lead.nome || ""}</td>
-      <td>${lead.telefone || ""}</td>
-      <td>${lead.status || "Lead Novo"}</td>
-    `;
-
-    tbody.appendChild(tr);
-  });
-}
-
-// 🔥 TESTE AUTOMÁTICO AO ABRIR
-document.addEventListener("DOMContentLoaded", loadLeads);
+});
 </script>
 </body>
 </html>
