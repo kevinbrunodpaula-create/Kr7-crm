@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KR7 CRM — Sistema Premium Imobiliário</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#222542;--navy-dark:#1a1d33;--navy-deep:#161829;--navy-hover:#2E325A;
+  --orange:#F47A3A;--orange-lit:#FF8F52;--orange-dim:rgba(244,122,58,0.13);
+  --white:#FFFFFF;--gray-100:#E5E5E5;--gray-200:#C8C8C8;
+  --text:#EEEEF5;--text2:#9898B8;--text3:#5E5E7A;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --green:#2ECC71;--red:#E74C3C;--blue:#4E9CFF;--purple:#9B7FFF;
+  --r:10px;--r2:7px;--sh:0 4px 24px rgba(0,0,0,0.35);--sh2:0 2px 8px rgba(0,0,0,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--navy-deep);color:var(--text);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--navy-dark);}
+::-webkit-scrollbar-thumb{background:var(--navy-hover);border-radius:4px;}
+
+/* LOADING */
+#loading{position:fixed;inset:0;z-index:9999;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+.ld-logo{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--white);}
+.ld-logo span{color:var(--orange);}
+.ld-bw{width:220px;height:3px;background:var(--navy-hover);border-radius:2px;overflow:hidden;}
+.ld-b{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange-lit));animation:ldA 1.8s ease forwards;}
+@keyframes ldA{from{width:0}to{width:100%}}
+.ld-txt{font-size:11px;color:var(--text3);letter-spacing:2px;}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:var(--navy-deep);overflow:hidden;}
+.lg-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 25% 60%,rgba(244,122,58,0.12) 0%,transparent 55%),radial-gradient(ellipse at 75% 20%,rgba(46,50,90,0.6) 0%,transparent 50%);}
+.lg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:56px 56px;}
+.lg-card{position:relative;z-index:2;width:100%;max-width:420px;padding:44px 40px;background:var(--navy);border:1px solid var(--border2);border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,0.5);animation:fadeUp .6s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.lg-main{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;color:var(--white);text-align:center;}
+.lg-main span{color:var(--orange);}
+.lg-sub{font-size:11px;letter-spacing:4px;color:var(--text3);text-transform:uppercase;margin-top:2px;text-align:center;}
+.lg-tag{text-align:center;margin:20px 0 28px;font-size:13px;color:var(--text2);line-height:1.6;}
+.lg-tag strong{color:var(--orange);font-weight:600;}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.5px;}
+.fi{width:100%;padding:11px 14px;background:var(--navy-dark);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
+.fi:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(244,122,58,.12);}
+.fg{margin-bottom:14px;}
+.btn-login{width:100%;padding:13px;margin-top:6px;background:linear-gradient(135deg,var(--orange),var(--orange-lit));color:#fff;border:none;border-radius:var(--r2);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:transform .15s,box-shadow .15s;}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(244,122,58,.35);}
+.lg-forgot{text-align:center;margin-top:14px;font-size:12px;color:var(--text3);cursor:pointer;}
+.lg-forgot:hover{color:var(--orange);}
+.lg-err{background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);border-radius:var(--r2);padding:10px 14px;font-size:12px;color:#FF8A80;margin-bottom:12px;display:none;}
+
+/* APP */
+#app{display:none;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--navy);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:transform .3s;}
+.sb-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.sb-lt{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--white);}
+.sb-lt span{color:var(--orange);}
+.sb-ls{font-size:9px;letter-spacing:3px;color:var(--text3);text-transform:uppercase;margin-top:1px;}
+.sb-nav{flex:1;padding:10px 0;overflow-y:auto;}
+.nav-sec{padding:10px 18px 4px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:var(--r2);cursor:pointer;font-size:13px;color:var(--text2);font-weight:500;transition:all .15s;user-select:none;}
+.nav-item:hover{background:var(--navy-hover);color:var(--text);}
+.nav-item.active{background:var(--orange-dim);color:var(--white);border-left:3px solid var(--orange);padding-left:11px;}
+.nav-ic{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--orange);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;}
+.sb-user{padding:14px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sb-av{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--orange),var(--orange-lit));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#fff;}
+.sb-un{font-size:13px;font-weight:600;}
+.sb-ur{font-size:10px;color:var(--text3);}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;}
+
+/* MAIN */
+.main-content{margin-left:240px;height:100vh;overflow-y:auto;background:var(--navy-deep);}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(22,24,41,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.tb-l{display:flex;align-items:center;gap:12px;}
+.tb-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
+.tb-r{display:flex;align-items:center;gap:10px;}
+.btn-p{padding:8px 16px;background:linear-gradient(135deg,var(--orange),var(--orange-lit));color:#fff;border:none;border-radius:var(--r2);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s;white-space:nowrap;}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(244,122,58,.3);}
+.btn-s{padding:8px 14px;background:var(--navy);color:var(--text2);border:1px solid var(--border);border-radius:var(--r2);font-size:12px;cursor:pointer;transition:border-color .15s,color .15s;}
+.btn-s:hover{border-color:var(--border2);color:var(--text);}
+.ntf{width:34px;height:34px;background:var(--navy);border:1px solid var(--border);border-radius:var(--r2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;position:relative;transition:border-color .15s;}
+.ntf:hover{border-color:var(--orange);}
+.ntf-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--orange);border-radius:50%;border:2px solid var(--navy-deep);}
+.ia-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(155,127,255,.12);border:1px solid rgba(155,127,255,.25);padding:3px 10px;border-radius:20px;font-size:10px;color:#C4B5FD;font-weight:600;}
+.ia-dot{width:5px;height:5px;border-radius:50%;background:#9B7FFF;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.db-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.25);padding:3px 10px;border-radius:20px;font-size:10px;color:#86EFAC;font-weight:600;}
+.db-dot{width:5px;height:5px;border-radius:50%;background:var(--green);}
+
+/* PAGES */
+.page{display:none;padding:22px;animation:fadeIn .25s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px;margin-bottom:20px;}
+.stat-card{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;cursor:default;transition:border-color .2s,transform .2s;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.c-or::after{background:var(--orange);}
+.c-gr::after{background:var(--green);}
+.c-bl::after{background:var(--blue);}
+.c-pu::after{background:var(--purple);}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.sv{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1;margin-top:10px;}
+.sl{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500;}
+.sc{font-size:11px;margin-top:7px;display:flex;align-items:center;gap:3px;}
+.sc.up{color:var(--green);}
+.sc.dn{color:var(--red);}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+.chart-card{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.ct{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.cs2{font-size:10px;color:var(--text3);font-weight:400;font-family:'Inter',sans-serif;}
+.bot-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.sec-t{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.5px;}
+.sec-t::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* RANKING */
+.ri{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.ri:last-child{border-bottom:none;}
+.rn{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text3);width:22px;}
+.rn.r1{color:#FFD700;}.rn.r2{color:#C0C0C0;}.rn.r3{color:#CD7F32;}
+.rav{width:32px;height:32px;border-radius:50%;background:var(--navy-hover);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+
+/* PIPELINE */
+.pi{display:flex;align-items:center;gap:8px;padding:7px 0;}
+.pl{font-size:11px;color:var(--text2);flex:1;}
+.pbw{flex:2;height:5px;background:var(--navy-dark);border-radius:3px;overflow:hidden;}
+.pb{height:100%;border-radius:3px;}
+.pc{font-size:11px;font-weight:600;width:26px;text-align:right;}
+
+/* SEARCH */
+.search-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.sw{position:relative;flex:1;min-width:200px;}
+.si-pos{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;}
+.s-inp{width:100%;padding:9px 12px 9px 34px;background:var(--navy);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.s-inp:focus{border-color:var(--orange);}
+.fsel{padding:9px 30px 9px 12px;background:var(--navy);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%235E5E7A' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.vtog{display:flex;background:var(--navy);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.vb{padding:7px 14px;font-size:12px;cursor:pointer;color:var(--text3);border:none;background:transparent;transition:background .15s,color .15s;font-weight:500;}
+.vb.active{background:var(--navy-hover);color:var(--text);}
+
+/* KANBAN */
+.kanban-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:calc(100vh - 200px);}
+.kcol{min-width:228px;max-width:228px;background:var(--navy);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;}
+.khd{padding:11px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.kt{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.kc{background:var(--navy-dark);color:var(--text2);font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;}
+.kcards{padding:7px;flex:1;overflow-y:auto;min-height:160px;}
+.kcard{background:var(--navy-dark);border:1px solid var(--border);border-radius:var(--r2);padding:11px;margin-bottom:7px;cursor:grab;transition:border-color .15s,transform .15s,box-shadow .15s;}
+.kcard:hover{border-color:var(--orange);transform:translateY(-1px);box-shadow:var(--sh2);}
+.kn{font-size:12px;font-weight:700;margin-bottom:3px;}
+.kph{font-size:11px;color:var(--text2);margin-bottom:7px;}
+.ktags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:7px;}
+.tag{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;white-space:nowrap;}
+.th{background:rgba(231,76,60,.2);color:#FF8A80;}
+.tw{background:rgba(244,122,58,.2);color:#FFAB76;}
+.tc{background:rgba(78,156,255,.2);color:#93C5FD;}
+.ta{background:rgba(155,127,255,.2);color:#C4B5FD;}
+.kval{font-size:10px;color:var(--text3);margin-bottom:7px;}
+.kfoot{display:flex;align-items:center;justify-content:space-between;}
+.kcorr{font-size:10px;color:var(--text3);}
+.kacts{display:flex;gap:3px;}
+.kbtn{width:22px;height:22px;border-radius:5px;background:var(--navy-hover);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;transition:border-color .15s;}
+.kbtn:hover{border-color:var(--orange);}
+.ob{font-size:10px;padding:2px 6px;border-radius:8px;font-weight:500;}
+.oi{background:rgba(155,127,255,.2);color:#C4B5FD;}
+.of{background:rgba(78,156,255,.2);color:#93C5FD;}
+.og{background:rgba(231,76,60,.2);color:#FF8A80;}
+.on2{background:rgba(46,204,113,.2);color:#86EFAC;}
+.os{background:rgba(244,122,58,.2);color:#FFAB76;}
+.oz{background:rgba(46,204,113,.2);color:#86EFAC;}
+.empty-k{text-align:center;padding:28px;color:var(--text3);font-size:12px;}
+
+/* TABLE */
+.tw2{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.ltable{width:100%;border-collapse:collapse;}
+.ltable th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;background:var(--navy-dark);}
+.ltable td{padding:11px 14px;font-size:12px;border-bottom:1px solid var(--border);}
+.ltable tr:last-child td{border-bottom:none;}
+.ltable tbody tr:hover td{background:rgba(255,255,255,.02);}
+
+/* IMOVEIS */
+.im-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+.im-card{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:border-color .2s,transform .2s;}
+.im-card:hover{border-color:var(--orange);transform:translateY(-2px);}
+.im-img{height:150px;background:var(--navy-hover);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;}
+.im-st{position:absolute;top:9px;right:9px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.std{background:rgba(46,204,113,.2);color:#86EFAC;border:1px solid rgba(46,204,113,.3);}
+.str{background:rgba(244,122,58,.2);color:#FFAB76;border:1px solid rgba(244,122,58,.3);}
+.stv{background:rgba(107,114,128,.2);color:#9CA3AF;border:1px solid rgba(107,114,128,.3);}
+.im-body{padding:14px;}
+.im-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:3px;}
+.im-loc{font-size:11px;color:var(--text3);margin-bottom:10px;}
+.im-price{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--orange);}
+.im-dets{display:flex;gap:10px;margin-top:9px;font-size:11px;color:var(--text2);}
+
+/* CORRETORES */
+.corr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+.corr-card{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);padding:22px;text-align:center;cursor:pointer;transition:border-color .2s,transform .2s;}
+.corr-card:hover{border-color:var(--orange);transform:translateY(-2px);}
+.corr-av{width:60px;height:60px;border-radius:50%;background:var(--navy-hover);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin:0 auto 10px;}
+.corr-nm{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:2px;}
+.corr-role{font-size:11px;color:var(--text3);margin-bottom:14px;}
+.cs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px;}
+.cs{background:var(--navy-dark);border-radius:var(--r2);padding:8px;}
+.cs-val{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;}
+.cs-lbl{font-size:9px;color:var(--text3);}
+.mbw{background:var(--navy-dark);border-radius:3px;height:5px;overflow:hidden;margin-bottom:5px;}
+.mb{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--orange-lit));}
+
+/* AGENDA */
+.ag-grid{display:grid;grid-template-columns:1fr 320px;gap:14px;}
+.cal-wrap{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.cal-mo{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.cal-nav{width:30px;height:30px;background:var(--navy-dark);border:1px solid var(--border);border-radius:var(--r2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:border-color .15s;}
+.cal-nav:hover{border-color:var(--orange);}
+.cal-dw{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:10px;color:var(--text3);margin-bottom:7px;font-weight:600;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:var(--r2);font-size:12px;cursor:pointer;position:relative;transition:background .15s;}
+.cal-day:hover{background:var(--navy-hover);}
+.cal-day.today{background:var(--orange);color:#fff;font-weight:700;}
+.cal-day.hev::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--orange);}
+.cal-day.today.hev::after{background:#fff;}
+.cal-day.oth{color:var(--text3);}
+.ev-sb{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
+.evi{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.evi:last-child{border-bottom:none;}
+.ev-dot{width:7px;height:7px;border-radius:50%;margin:3px 0;}
+.ev-line{flex:1;width:1px;background:var(--border);}
+.ev-title{font-size:12px;font-weight:600;}
+.ev-sub{font-size:10px;color:var(--text2);margin-top:2px;}
+.ev-badge{font-size:9px;padding:2px 7px;border-radius:8px;margin-top:5px;display:inline-block;}
+
+/* RELATORIOS */
+.rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+
+/* CONFIG */
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cfg-card{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);padding:22px;}
+.cfg-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:14px;}
+.tgr{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.tgr:last-child{border-bottom:none;}
+.tgl{font-size:13px;font-weight:500;}
+.tgs{font-size:10px;color:var(--text3);}
+.toggle{width:42px;height:22px;background:var(--navy-dark);border-radius:11px;position:relative;cursor:pointer;border:1px solid var(--border2);transition:background .2s;}
+.toggle.on{background:var(--orange);border-color:var(--orange);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text3);transition:left .2s,background .2s;}
+.toggle.on::after{left:22px;background:#fff;}
+
+/* WHATSAPP */
+.wpp-grid{display:grid;grid-template-columns:270px 1fr;gap:14px;height:calc(100vh - 170px);}
+.wpp-con{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);overflow-y:auto;}
+.wpp-c{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.wpp-c:hover{background:var(--navy-hover);}
+.wpp-c.active{background:var(--orange-dim);border-left:3px solid var(--orange);}
+.wpp-cav{width:38px;height:38px;border-radius:50%;background:var(--navy-hover);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.wpp-chat{background:var(--navy);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;}
+.wpp-chd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.wpp-msgs{flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.wpp-msg{max-width:68%;padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.5;}
+.wpp-msg.sent{background:var(--navy-hover);border:1px solid var(--border);align-self:flex-end;border-radius:10px 10px 3px 10px;}
+.wpp-msg.recv{background:rgba(244,122,58,.1);border:1px solid rgba(244,122,58,.2);align-self:flex-start;border-radius:10px 10px 10px 3px;}
+.wpp-mt{font-size:10px;color:var(--text3);margin-top:3px;text-align:right;}
+.tpl-w{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.tpl-b{font-size:10px;padding:4px 9px;border-radius:8px;background:var(--navy-dark);border:1px solid var(--border);cursor:pointer;color:var(--text2);transition:border-color .15s,color .15s;}
+.tpl-b:hover{border-color:var(--orange);color:var(--text);}
+.wpp-iw{padding:14px 16px;border-top:1px solid var(--border);display:flex;gap:9px;}
+.wpp-inp{flex:1;padding:10px 14px;background:var(--navy-dark);border:1px solid var(--border);border-radius:20px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.wpp-inp:focus{border-color:var(--orange);}
+.wpp-send{width:38px;height:38px;background:var(--orange);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;transition:transform .15s;}
+.wpp-send:hover{transform:scale(1.1);}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--navy);border:1px solid var(--border2);border-radius:14px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:fadeUp .3s ease;}
+.mhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.mtitle{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+.mclose{width:30px;height:30px;background:var(--navy-dark);border:1px solid var(--border);border-radius:var(--r2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:border-color .15s;}
+.mclose:hover{border-color:var(--orange);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fgm{margin-bottom:13px;}
+.flm{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.3px;}
+.fim{width:100%;padding:10px 12px;background:var(--navy-dark);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.fim:focus{border-color:var(--orange);}
+.fsm{width:100%;padding:10px 30px 10px 12px;background:var(--navy-dark);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%235E5E7A' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .2s;}
+.fsm:focus{border-color:var(--orange);}
+.fta{width:100%;padding:10px 12px;background:var(--navy-dark);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:72px;transition:border-color .2s;}
+.fta:focus{border-color:var(--orange);}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--navy);border:1px solid var(--border);border-radius:var(--r2);padding:11px 14px;display:flex;align-items:center;gap:9px;font-size:12px;box-shadow:var(--sh);animation:slideIn .3s ease;min-width:220px;}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+.toast.success{border-color:rgba(46,204,113,.4);}
+.toast.error{border-color:rgba(231,76,60,.4);}
+.toast.info{border-color:rgba(78,156,255,.4);}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main-content{margin-left:0;}
+  .charts-grid,.bot-grid,.rel-grid,.cfg-grid{grid-template-columns:1fr;}
+  .ag-grid,.wpp-grid{grid-template-columns:1fr;}
+  .fr{grid-template-columns:1fr;}
+  #menu-btn{display:flex!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="ld-logo">KR<span>7</span></div>
+  <div class="ld-bw"><div class="ld-b"></div></div>
+  <div class="ld-txt" id="ld-msg">CONECTANDO AO BANCO DE DADOS...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lg-bg"></div><div class="lg-grid"></div>
+  <div class="lg-card">
+    <div class="lg-main">KR<span>7</span> CRM</div>
+    <div class="lg-sub">Sistema Premium Imobiliário</div>
+    <div class="lg-tag"><strong>Venda mais. Organize tudo. Cresça rápido.</strong><br>O CRM que transforma corretores em campeões.</div>
+    <div class="lg-err" id="lg-err"></div>
+    <div class="fg"><label class="fl">E-MAIL</label><input type="email" class="fi" id="lg-email" placeholder="seu@email.com" value="admin@kr7crm.com"></div>
+    <div class="fg"><label class="fl">SENHA</label><input type="password" class="fi" id="lg-pass" placeholder="••••••••" value="admin123456"></div>
+    <button class="btn-login" id="btn-entrar" onclick="doLogin()">ENTRAR NO SISTEMA</button>
+    <div class="lg-forgot" onclick="showToast('Use admin@kr7crm.com / admin123456','info')">Esqueci minha senha</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-lt">KR<span>7</span> CRM</div>
+      <div class="sb-ls">Imobiliária Premium</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <div class="nav-item active" onclick="goTo('dashboard',this)"><span class="nav-ic">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="goTo('leads',this)"><span class="nav-ic">👥</span>Leads<span class="nav-badge" id="badge-leads">0</span></div>
+      <div class="nav-item" onclick="goTo('whatsapp',this)"><span class="nav-ic">💬</span>WhatsApp</div>
+      <div class="nav-sec">Imóveis & Equipe</div>
+      <div class="nav-item" onclick="goTo('imoveis',this)"><span class="nav-ic">🏠</span>Imóveis</div>
+      <div class="nav-item" onclick="goTo('corretores',this)"><span class="nav-ic">🏆</span>Corretores</div>
+      <div class="nav-sec">Gestão</div>
+      <div class="nav-item" onclick="goTo('agenda',this)"><span class="nav-ic">📅</span>Agenda</div>
+      <div class="nav-item" onclick="goTo('relatorios',this)"><span class="nav-ic">📈</span>Relatórios</div>
+      <div class="nav-sec">Sistema</div>
+      <div class="nav-item" onclick="goTo('config',this)"><span class="nav-ic">⚙️</span>Configurações</div>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-av">AD</div>
+      <div><div class="sb-un">Admin KR7</div><div class="sb-ur">Gestor Master</div></div>
+      <div class="sb-dot" title="Supabase conectado"></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="tb-l">
+        <button id="menu-btn" style="display:none;background:var(--navy);border:1px solid var(--border);border-radius:7px;padding:7px 9px;cursor:pointer;font-size:16px;color:var(--text)" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div class="tb-title" id="page-title">Dashboard</div>
+        <div class="ia-badge"><span class="ia-dot"></span>IA Ativa</div>
+        <div class="db-badge"><span class="db-dot"></span>Supabase Online</div>
+      </div>
+      <div class="tb-r">
+        <button class="btn-p" id="topbar-primary" onclick="openModal('add-lead')">+ Novo Lead</button>
+        <div class="ntf" onclick="showToast('3 follow-ups pendentes hoje!','info')">🔔<div class="ntf-dot"></div></div>
+      </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card c-or"><div style="font-size:18px">⚡</div><div class="sv" id="d-hoje">—</div><div class="sl">LEADS HOJE</div><div class="sc up" id="d-hoje-s"></div></div>
+        <div class="stat-card c-bl"><div style="font-size:18px">📥</div><div class="sv" id="d-mes">—</div><div class="sl">LEADS DO MÊS</div><div class="sc up"></div></div>
+        <div class="stat-card c-gr"><div style="font-size:18px">🎯</div><div class="sv" id="d-conv">—</div><div class="sl">TAXA CONVERSÃO</div></div>
+        <div class="stat-card c-or"><div style="font-size:18px">🏆</div><div class="sv" id="d-fechados">—</div><div class="sl">VENDAS FECHADAS</div></div>
+        <div class="stat-card c-pu"><div style="font-size:18px">📋</div><div class="sv" id="d-proposta">—</div><div class="sl">PROPOSTAS ABERTAS</div></div>
+        <div class="stat-card c-gr"><div style="font-size:18px">👥</div><div class="sv" id="d-total">—</div><div class="sl">TOTAL DE LEADS</div></div>
+        <div class="stat-card c-bl"><div style="font-size:18px">🔥</div><div class="sv" id="d-quentes">—</div><div class="sl">LEADS QUENTES</div></div>
+        <div class="stat-card c-or"><div style="font-size:18px">🏠</div><div class="sv" id="d-imoveis">—</div><div class="sl">IMÓVEIS ATIVOS</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="ct">Pipeline de Vendas<span class="cs2">Distribuição atual</span></div><canvas id="ch-pipeline" height="100"></canvas></div>
+        <div class="chart-card"><div class="ct">Origem dos Leads<span class="cs2">Todos os leads</span></div><canvas id="ch-origem" height="180"></canvas></div>
+      </div>
+      <div class="bot-grid">
+        <div class="chart-card">
+          <div class="sec-t">🏆 Top Corretores</div>
+          <div id="dash-ranking"><div style="color:var(--text3);font-size:12px;padding:20px 0;text-align:center">Carregando...</div></div>
+        </div>
+        <div class="chart-card">
+          <div class="sec-t">🔄 Funil de Leads</div>
+          <div id="dash-pipeline"></div>
+        </div>
+        <div class="chart-card">
+          <div class="sec-t">🤖 IA — Alertas</div>
+          <div id="dash-alertas">
+            <div style="background:rgba(244,122,58,.1);border:1px solid rgba(244,122,58,.2);border-radius:7px;padding:10px;margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--orange-lit);margin-bottom:3px">🔥 Oportunidade</div><div style="font-size:11px;color:var(--text2)" id="alerta-quentes">Carregando...</div></div>
+            <div style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.2);border-radius:7px;padding:10px;margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:#FF8A80;margin-bottom:3px">⚠️ Atenção</div><div style="font-size:11px;color:var(--text2)" id="alerta-perdidos">Carregando...</div></div>
+            <div style="background:rgba(155,127,255,.1);border:1px solid rgba(155,127,255,.2);border-radius:7px;padding:10px"><div style="font-size:11px;font-weight:700;color:#C4B5FD;margin-bottom:3px">💡 IA sugere</div><div style="font-size:11px;color:var(--text2)" id="alerta-ia">Analisando dados...</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="page" id="page-leads">
+      <div class="search-row">
+        <div class="sw"><span class="si-pos">🔍</span><input type="text" class="s-inp" id="search-lead" placeholder="Buscar lead..." oninput="filterLeads()"></div>
+        <div class="vtog">
+          <button class="vb active" onclick="setView('kanban',this)">Kanban</button>
+          <button class="vb" onclick="setView('lista',this)">Lista</button>
+        </div>
+        <select class="fsel" id="filter-corr" onchange="filterLeads()"><option value="">Todos corretores</option></select>
+        <select class="fsel" id="filter-status" onchange="filterLeads()">
+          <option value="">Todos status</option>
+          <option>Lead Novo</option><option>Primeiro Contato</option><option>Em Atendimento</option>
+          <option>Qualificado</option><option>Visita Marcada</option><option>Proposta</option>
+          <option>Documentação</option><option>Fechado</option><option>Perdido</option>
+        </select>
+      </div>
+      <div id="leads-kanban"><div class="kanban-wrap" id="kanban-board"></div></div>
+      <div id="leads-lista" style="display:none"><div class="tw2"><table class="ltable"><thead><tr><th>Nome</th><th>Telefone</th><th>Interesse</th><th>Tipo</th><th>Valor</th><th>Origem</th><th>Corretor</th><th>Status</th><th>Ações</th></tr></thead><tbody id="leads-tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div class="page" id="page-whatsapp">
+      <div class="wpp-grid">
+        <div class="wpp-con">
+          <div style="padding:10px;border-bottom:1px solid var(--border)"><input type="text" class="s-inp" placeholder="🔍 Buscar..." style="padding:8px 12px;font-size:12px"></div>
+          <div id="wpp-list"></div>
+        </div>
+        <div class="wpp-chat">
+          <div class="wpp-chd">
+            <div class="wpp-cav" id="wpp-av">—</div>
+            <div><div style="font-size:13px;font-weight:700" id="wpp-nm">Selecione um lead</div><div style="font-size:10px;color:var(--text3)">KR7 CRM · WhatsApp</div></div>
+            <div style="margin-left:auto"><button class="btn-p" style="font-size:11px" onclick="openWhatsApp()">📱 Abrir WhatsApp</button></div>
+          </div>
+          <div class="tpl-w">
+            <span style="font-size:10px;color:var(--text3);margin-right:3px">Templates:</span>
+            <button class="tpl-b" onclick="useTemplate('Olá! Vi que você tem interesse em imóveis. Posso te ajudar? 😊')">1º Contato</button>
+            <button class="tpl-b" onclick="useTemplate('Oi! Ainda tem interesse no imóvel? Tenho novidades!')">Follow-up</button>
+            <button class="tpl-b" onclick="useTemplate('Visita confirmada para amanhã às 10h! 🏠')">Conf. Visita</button>
+            <button class="tpl-b" onclick="useTemplate('Que ótimo te receber! O que achou do imóvel?')">Pós Visita</button>
+            <button class="tpl-b" onclick="useTemplate('Oi! Faz um tempo que não conversamos. Ainda procurando? 🔑')">Recuperação</button>
+          </div>
+          <div class="wpp-msgs" id="wpp-msgs">
+            <div style="text-align:center;color:var(--text3);font-size:12px;margin:auto">Selecione um lead na lista ao lado para iniciar a conversa</div>
+          </div>
+          <div class="wpp-iw">
+            <input type="text" class="wpp-inp" id="wpp-input" placeholder="Digite uma mensagem..." onkeydown="if(event.key==='Enter')sendWpp()">
+            <button class="wpp-send" onclick="sendWpp()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMOVEIS -->
+    <div class="page" id="page-imoveis">
+      <div class="search-row">
+        <div class="sw"><span class="si-pos">🔍</span><input type="text" class="s-inp" placeholder="Buscar imóvel..."></div>
+        <select class="fsel"><option>Todos status</option><option>Disponível</option><option>Reservado</option><option>Vendido</option></select>
+        <button class="btn-p" onclick="openModal('add-imovel')">+ Novo Imóvel</button>
+      </div>
+      <div class="im-grid" id="imoveis-grid"></div>
+    </div>
+
+    <!-- CORRETORES -->
+    <div class="page" id="page-corretores">
+      <div style="margin-bottom:16px;display:flex;justify-content:flex-end">
+        <button class="btn-p" onclick="openModal('add-corretor')">+ Novo Corretor</button>
+      </div>
+      <div class="corr-grid" id="corr-grid"></div>
+    </div>
+
+    <!-- AGENDA -->
+    <div class="page" id="page-agenda">
+      <div class="ag-grid">
+        <div class="cal-wrap">
+          <div class="cal-hd">
+            <button class="cal-nav" onclick="prevMonth()">‹</button>
+            <div class="cal-mo" id="cal-title"></div>
+            <button class="cal-nav" onclick="nextMonth()">›</button>
+          </div>
+          <div class="cal-dw"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="ev-sb">
+          <div class="sec-t">📅 Próximos Eventos</div>
+          <div id="events-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RELATORIOS -->
+    <div class="page" id="page-relatorios">
+      <div class="rel-grid">
+        <div class="chart-card"><div class="ct">Leads por Origem</div><canvas id="ch-r-origem" height="200"></canvas></div>
+        <div class="chart-card"><div class="ct">Leads por Status</div><canvas id="ch-r-status" height="200"></canvas></div>
+        <div class="chart-card"><div class="ct">Interesse dos Leads</div><canvas id="ch-r-int" height="200"></canvas></div>
+        <div class="chart-card"><div class="ct">Leads por Corretor</div><canvas id="ch-r-corr" height="200"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="sec-t">📋 Todos os Leads</div>
+        <table class="ltable">
+          <thead><tr><th>Nome</th><th>Telefone</th><th>Tipo</th><th>Valor</th><th>Origem</th><th>Corretor</th><th>Status</th><th>Interesse</th></tr></thead>
+          <tbody id="rel-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="page" id="page-config">
+      <div class="cfg-grid">
+        <div class="cfg-card">
+          <div class="cfg-title">🔗 Supabase — Conectado ✅</div>
+          <div style="background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.2);border-radius:7px;padding:14px;margin-bottom:14px">
+            <div style="font-size:12px;font-weight:700;color:#86EFAC;margin-bottom:6px">✅ Banco de dados ativo</div>
+            <div style="font-size:11px;color:var(--text2)">Projeto: <strong>fjysqoqglqlpfxvxvvzt</strong></div>
+            <div style="font-size:11px;color:var(--text2);margin-top:3px">Tabelas: leads · imóveis · corretores</div>
+          </div>
+          <button class="btn-p" style="font-size:12px;width:100%" onclick="loadAll();showToast('Dados atualizados!','success')">🔄 Sincronizar Dados</button>
+        </div>
+        <div class="cfg-card">
+          <div class="cfg-title">🔔 Notificações</div>
+          <div class="tgr"><div><div class="tgl">Follow-up automático</div><div class="tgs">Alerta leads parados</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="tgr"><div><div class="tgl">Aniversários</div><div class="tgs">Mensagem automática</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="tgr"><div><div class="tgl">Meta diária</div><div class="tgs">Aviso de progresso</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="cfg-card">
+          <div class="cfg-title">🎨 Aparência</div>
+          <div class="tgr"><div><div class="tgl">Dark Mode</div><div class="tgs">Tema escuro KR7</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="tgr"><div><div class="tgl">Animações</div><div class="tgs">Efeitos visuais suaves</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="tgr"><div><div class="tgl">Sons</div><div class="tgs">Notificações sonoras</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="cfg-card">
+          <div class="cfg-title">👥 Usuários</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px;background:var(--navy-dark);border-radius:7px"><div><div style="font-size:12px;font-weight:700">Admin KR7</div><div style="font-size:10px;color:var(--text3)">admin@kr7crm.com</div></div><span style="font-size:9px;background:rgba(244,122,58,.2);color:var(--orange);padding:3px 7px;border-radius:8px;font-weight:700">ADMIN</span></div>
+            <button class="btn-p" style="font-size:11px" onclick="showToast('Gestão de usuários em breve!','info')">+ Adicionar Usuário</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL NOVO LEAD -->
+<div class="modal-ov" id="modal-add-lead">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">➕ Novo Lead</div><div class="mclose" onclick="closeModal('add-lead')">✕</div></div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">NOME COMPLETO *</label><input class="fim" placeholder="João da Silva" id="new-nome"></div>
+      <div class="fgm"><label class="flm">TELEFONE / WHATSAPP *</label><input class="fim" placeholder="(11) 99999-9999" id="new-tel"></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">E-MAIL</label><input class="fim" placeholder="joao@email.com" type="email" id="new-email"></div>
+      <div class="fgm"><label class="flm">ORIGEM</label><select class="fsm" id="new-origem"><option>Instagram</option><option>Facebook</option><option>Google</option><option>Indicação</option><option>Site</option><option>WhatsApp</option><option>Outro</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">TIPO DE IMÓVEL</label><select class="fsm" id="new-tipo"><option>Apartamento</option><option>Casa</option><option>Kitnet</option><option>Terreno</option><option>Comercial</option></select></div>
+      <div class="fgm"><label class="flm">VALOR PRETENDIDO</label><input class="fim" placeholder="R$ 350.000" id="new-valor"></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">BAIRRO DESEJADO</label><input class="fim" placeholder="Centro, Jardins..." id="new-bairro"></div>
+      <div class="fgm"><label class="flm">INTERESSE</label><select class="fsm" id="new-int"><option value="hot">🔥 Quente</option><option value="warm">🟡 Morno</option><option value="cold">🧊 Frio</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">CORRETOR</label><select class="fsm" id="new-corr"><option>Rafael Costa</option><option>Ana Melo</option><option>Lucas Silva</option><option>Julia Prado</option><option>Sem corretor</option></select></div>
+      <div class="fgm"><label class="flm">URGÊNCIA</label><select class="fsm" id="new-urg"><option>Imediata</option><option>3 meses</option><option>6 meses</option><option>Sem pressa</option></select></div>
+    </div>
+    <div class="fgm"><label class="flm">OBSERVAÇÕES</label><textarea class="fta" placeholder="Informações adicionais..." id="new-obs"></textarea></div>
+    <div style="display:flex;gap:9px;margin-top:6px">
+      <button class="btn-s" style="flex:1" onclick="closeModal('add-lead')">Cancelar</button>
+      <button class="btn-p" style="flex:2" id="btn-save-lead" onclick="saveLead()">Salvar no Supabase</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO IMÓVEL -->
+<div class="modal-ov" id="modal-add-imovel">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">🏠 Novo Imóvel</div><div class="mclose" onclick="closeModal('add-imovel')">✕</div></div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">NOME DO EMPREENDIMENTO *</label><input class="fim" placeholder="Ex: Jardim Europa Tower" id="im-nome"></div>
+      <div class="fgm"><label class="flm">TIPO</label><select class="fsm" id="im-tipo"><option>Apartamento</option><option>Casa</option><option>Kitnet</option><option>Terreno</option><option>Comercial</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">BAIRRO</label><input class="fim" placeholder="Jardim Europa" id="im-bairro"></div>
+      <div class="fgm"><label class="flm">CIDADE</label><input class="fim" placeholder="São Paulo" id="im-cidade"></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">VALOR</label><input class="fim" placeholder="R$ 500.000" id="im-valor"></div>
+      <div class="fgm"><label class="flm">ENTRADA ESTIMADA</label><input class="fim" placeholder="R$ 100.000" id="im-entrada"></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">QUARTOS</label><input class="fim" type="number" placeholder="3" id="im-quartos"></div>
+      <div class="fgm"><label class="flm">BANHEIROS</label><input class="fim" type="number" placeholder="2" id="im-banheiros"></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">GARAGEM</label><input class="fim" type="number" placeholder="2" id="im-garagem"></div>
+      <div class="fgm"><label class="flm">METRAGEM</label><input class="fim" placeholder="87m²" id="im-metragem"></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">CONSTRUTORA</label><input class="fim" placeholder="Cyrela" id="im-const"></div>
+      <div class="fgm"><label class="flm">STATUS</label><select class="fsm" id="im-status"><option>Disponível</option><option>Reservado</option><option>Vendido</option></select></div>
+    </div>
+    <div style="display:flex;gap:9px;margin-top:6px">
+      <button class="btn-s" style="flex:1" onclick="closeModal('add-imovel')">Cancelar</button>
+      <button class="btn-p" style="flex:2" id="btn-save-im" onclick="saveImovel()">Salvar no Supabase</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO CORRETOR -->
+<div class="modal-ov" id="modal-add-corretor">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">🏆 Novo Corretor</div><div class="mclose" onclick="closeModal('add-corretor')">✕</div></div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">NOME COMPLETO *</label><input class="fim" placeholder="Rafael Costa" id="co-nome"></div>
+      <div class="fgm"><label class="flm">CARGO</label><select class="fsm" id="co-cargo"><option>Corretor</option><option>Corretor Senior</option><option>Corretora</option><option>Gestor</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fgm"><label class="flm">TELEFONE</label><input class="fim" placeholder="(11) 99999-9999" id="co-tel"></div>
+      <div class="fgm"><label class="flm">E-MAIL</label><input class="fim" placeholder="corretor@kr7.com" id="co-email"></div>
+    </div>
+    <div class="fgm"><label class="flm">META MENSAL (R$)</label><input class="fim" type="number" placeholder="50000" id="co-meta"></div>
+    <div style="display:flex;gap:9px;margin-top:6px">
+      <button class="btn-s" style="flex:1" onclick="closeModal('add-corretor')">Cancelar</button>
+      <button class="btn-p" style="flex:2" id="btn-save-co" onclick="saveCorretor()">Salvar no Supabase</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ═══ SUPABASE CONFIG ═══
+const SUPA_URL = 'https://fjysqoqglqlpfxvxvvzt.supabase.co';
+const SUPA_KEY = 'sb_publishable_5OYsGs28d5eh9pBbOTBa6Q_YepVgSYV';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY);
+
+// ═══ STATE ═══
+let allLeads = [], allImoveis = [], allCorretores = [];
+let currentWppLead = null;
+let chartPipeline = null, chartOrigem = null;
+
+// ═══ LOGIN ═══
+async function doLogin() {
+  const email = document.getElementById('lg-email').value;
+  const pass = document.getElementById('lg-pass').value;
+  const btn = document.getElementById('btn-entrar');
+  const err = document.getElementById('lg-err');
+  err.style.display = 'none';
+  btn.innerHTML = '<span class="spin"></span> Entrando...';
+  btn.disabled = true;
+
+  // Login simples para demo — em produção use Supabase Auth
+  if (email && pass.length >= 6) {
+    setTimeout(async () => {
+      document.getElementById('login-screen').style.opacity = '0';
+      document.getElementById('login-screen').style.transition = 'opacity .4s';
+      setTimeout(async () => {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        await loadAll();
+        showToast('Bem-vindo ao KR7 CRM! 🚀', 'success');
+      }, 400);
+    }, 800);
+  } else {
+    err.textContent = 'Preencha e-mail e senha (mín. 6 caracteres)';
+    err.style.display = 'block';
+    btn.innerHTML = 'ENTRAR NO SISTEMA';
+    btn.disabled = false;
+  }
+}
+
+// ═══ LOAD ALL DATA ═══
+async function loadAll() {
+  document.getElementById('ld-msg').textContent = 'CARREGANDO DADOS...';
+  try {
+    const [leadsRes, imoveisRes, corretoresRes] = await Promise.all([
+      db.from('leads').select('*').order('created_at', { ascending: false }),
+      db.from('imoveis').select('*').order('created_at', { ascending: false }),
+      db.from('corretores').select('*').order('nome')
+    ]);
+    allLeads = leadsRes.data || [];
+    allImoveis = imoveisRes.data || [];
+    allCorretores = corretoresRes.data || [];
+
+    updateDashboard();
+    renderKanban(allLeads);
+    renderLeadsList(allLeads);
+    renderImoveis(allImoveis);
+    renderCorretores(allCorretores);
+    renderWppContacts(allLeads);
+    renderRelatorio(allLeads);
+    updateBadges();
+    updateCorretorFilter();
+    initCharts(allLeads);
+    renderCalendar();
+    renderEvents();
+  } catch(e) {
+    showToast('Erro ao carregar dados: ' + e.message, 'error');
+  }
+}
+
+// ═══ DASHBOARD ═══
+function updateDashboard() {
+  const hoje = new Date().toDateString();
+  const leadsHoje = allLeads.filter(l => new Date(l.created_at).toDateString() === hoje).length;
+  const leadsTotal = allLeads.length;
+  const fechados = allLeads.filter(l => l.status === 'Fechado').length;
+  const propostas = allLeads.filter(l => l.status === 'Proposta').length;
+  const quentes = allLeads.filter(l => l.interesse === 'hot').length;
+  const conv = leadsTotal > 0 ? ((fechados / leadsTotal) * 100).toFixed(1) : '0.0';
+  const imAtivos = allImoveis.filter(i => i.status === 'Disponível').length;
+
+  set('d-hoje', leadsHoje);
+  set('d-mes', allLeads.length);
+  set('d-conv', conv + '%');
+  set('d-fechados', fechados);
+  set('d-proposta', propostas);
+  set('d-total', leadsTotal);
+  set('d-quentes', quentes);
+  set('d-imoveis', imAtivos);
+
+  // Alertas IA
+  set('alerta-quentes', `${quentes} leads quentes aguardando contato`);
+  const perdidos = allLeads.filter(l => l.status === 'Perdido').length;
+  set('alerta-perdidos', `${perdidos} leads marcados como perdidos`);
+  set('alerta-ia', leadsTotal > 0
+    ? `Taxa de conversão: ${conv}%. ${conv < 15 ? 'Foque em qualificação!' : 'Bom desempenho! 🚀'}`
+    : 'Cadastre seus primeiros leads para análise!');
+
+  // Ranking
+  const corrCounts = {};
+  allLeads.filter(l => l.status === 'Fechado').forEach(l => {
+    corrCounts[l.corretor] = (corrCounts[l.corretor] || 0) + 1;
+  });
+  const sorted = Object.entries(corrCounts).sort((a,b) => b[1]-a[1]).slice(0,4);
+  const ranks = ['r1','r2','r3',''];
+  const medals = ['🥇','🥈','🥉',''];
+  document.getElementById('dash-ranking').innerHTML = sorted.length > 0
+    ? sorted.map(([ nome, vendas ], i) => `
+        <div class="ri">
+          <div class="rn ${ranks[i]}">${i+1}</div>
+          <div class="rav">${nome.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">${nome}</div></div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--orange)">${vendas} venda${vendas>1?'s':''}</div>
+        </div>`).join('')
+    : '<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Nenhuma venda fechada ainda</div>';
+
+  // Pipeline
+  const cols = ['Lead Novo','Primeiro Contato','Em Atendimento','Qualificado','Visita Marcada','Proposta','Documentação','Fechado'];
+  const colors = ['var(--blue)','var(--purple)','var(--orange)','var(--orange-lit)','#FFD700','var(--gray-200)','var(--green)','var(--green)'];
+  const max = Math.max(...cols.map(c => allLeads.filter(l => l.status === c).length), 1);
+  document.getElementById('dash-pipeline').innerHTML = cols.map((c, i) => {
+    const n = allLeads.filter(l => l.status === c).length;
+    return `<div class="pi"><div class="pl">${c}</div><div class="pbw"><div class="pb" style="width:${(n/max)*100}%;background:${colors[i]}"></div></div><div class="pc">${n}</div></div>`;
+  }).join('');
+}
+
+function set(id, val) { const el = document.getElementById(id); if(el) el.textContent = val; }
+
+// ═══ CHARTS ═══
+function initCharts(leads) {
+  const gc = 'rgba(255,255,255,0.04)', tc = '#5E5E7A';
+
+  // Pipeline chart
+  const cols = ['Lead Novo','1º Contato','Atendimento','Qualificado','Visita','Proposta','Docs','Fechado','Perdido'];
+  const colsFull = ['Lead Novo','Primeiro Contato','Em Atendimento','Qualificado','Visita Marcada','Proposta','Documentação','Fechado','Perdido'];
+  const pData = colsFull.map(c => leads.filter(l => l.status === c).length);
+  const cM = document.getElementById('ch-pipeline');
+  if(cM) {
+    if(chartPipeline) chartPipeline.destroy();
+    chartPipeline = new Chart(cM, {type:'bar',data:{labels:cols,datasets:[{data:pData,backgroundColor:'rgba(244,122,58,0.5)',borderColor:'rgba(244,122,58,0.9)',borderWidth:1,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc}}}}});
+  }
+
+  // Origem chart
+  const origens = {};
+  leads.forEach(l => { if(l.origem) origens[l.origem] = (origens[l.origem]||0)+1; });
+  const cO = document.getElementById('ch-origem');
+  if(cO) {
+    if(chartOrigem) chartOrigem.destroy();
+    chartOrigem = new Chart(cO, {type:'doughnut',data:{labels:Object.keys(origens),datasets:[{data:Object.values(origens),backgroundColor:['rgba(244,122,58,.85)','rgba(78,156,255,.85)','rgba(231,76,60,.85)','rgba(46,204,113,.85)','rgba(155,127,255,.85)','rgba(46,204,113,.6)'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{labels:{color:'#9898B8',font:{size:11}},position:'bottom'}},cutout:'60%'}});
+  }
+}
+
+function initRelCharts() {
+  const gc = 'rgba(255,255,255,0.04)', tc = '#5E5E7A';
+  const origens = {}, statuses = {}, ints = {}, corrs = {};
+  allLeads.forEach(l => {
+    if(l.origem) origens[l.origem] = (origens[l.origem]||0)+1;
+    if(l.status) statuses[l.status] = (statuses[l.status]||0)+1;
+    if(l.interesse) ints[l.interesse] = (ints[l.interesse]||0)+1;
+    if(l.corretor) corrs[l.corretor] = (corrs[l.corretor]||0)+1;
+  });
+
+  const mk = (id, type, labels, data, colors) => {
+    const el = document.getElementById(id);
+    if(el && !el._c) {
+      el._c = true;
+      new Chart(el, {type, data:{labels, datasets:[{data, backgroundColor: colors || 'rgba(244,122,58,0.5)', borderColor: colors ? undefined : 'rgba(244,122,58,0.8)', borderWidth:1, borderRadius:4}]}, options:{responsive:true, indexAxis: type==='bar'?'y':undefined, plugins:{legend:{display: type==='doughnut', labels:{color:'#9898B8',font:{size:11}}, position:'bottom'}}, cutout: type==='doughnut'?'55%':undefined, scales: type!=='doughnut' ? {x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}} : undefined}});
+    }
+  };
+  mk('ch-r-origem', 'bar', Object.keys(origens), Object.values(origens));
+  mk('ch-r-status', 'bar', Object.keys(statuses), Object.values(statuses));
+  mk('ch-r-int', 'doughnut', ['Quente','Morno','Frio'], [ints.hot||0,ints.warm||0,ints.cold||0], ['rgba(231,76,60,.7)','rgba(244,122,58,.7)','rgba(78,156,255,.7)']);
+  mk('ch-r-corr', 'bar', Object.keys(corrs), Object.values(corrs));
+}
+
+// ═══ KANBAN ═══
+const COLS = ['Lead Novo','Primeiro Contato','Em Atendimento','Qualificado','Visita Marcada','Proposta','Documentação','Fechado','Perdido'];
+const COL_C = {'Lead Novo':'var(--blue)','Primeiro Contato':'var(--purple)','Em Atendimento':'var(--orange)','Qualificado':'var(--orange-lit)','Visita Marcada':'#FFD700','Proposta':'var(--gray-200)','Documentação':'var(--green)','Fechado':'var(--green)','Perdido':'var(--red)'};
+const INT_C = {hot:'th',warm:'tw',cold:'tc'};
+const INT_L = {hot:'🔥 Quente',warm:'🟡 Morno',cold:'🧊 Frio'};
+const ORI_C = {Instagram:'oi',Facebook:'of',Google:'og','Indicação':'on2',Site:'os',WhatsApp:'oz'};
+
+function renderKanban(leads) {
+  const board = document.getElementById('kanban-board');
+  if(!board) return;
+  board.innerHTML = COLS.map(col => {
+    const cl = leads.filter(l => l.status === col);
+    return `<div class="kcol">
+      <div class="khd"><div class="kt" style="color:${COL_C[col]||'var(--text)'}">${col}</div><div class="kc">${cl.length}</div></div>
+      <div class="kcards">
+        ${cl.map(l => `<div class="kcard">
+          <div class="kn">${l.nome}</div>
+          <div class="kph">📱 ${l.telefone||'—'}</div>
+          <div class="ktags">
+            <span class="tag ${INT_C[l.interesse]||'tc'}">${INT_L[l.interesse]||l.interesse}</span>
+            <span class="tag ta">${l.tipo_imovel||'—'}</span>
+            ${l.origem ? `<span class="ob ${ORI_C[l.origem]||''}">${l.origem}</span>` : ''}
+          </div>
+          <div class="kval">${l.valor||''} ${l.bairro?'· '+l.bairro:''}</div>
+          <div class="kfoot">
+            <div class="kcorr">${l.corretor?l.corretor.split(' ')[0]:''}</div>
+            <div class="kacts">
+              <div class="kbtn" onclick="openWhatsAppDirect('${l.telefone||''}')" title="WhatsApp">💬</div>
+              <div class="kbtn" onclick="changeStatus('${l.id}')" title="Mudar status">🔄</div>
+              <div class="kbtn" onclick="deleteLead('${l.id}','${l.nome}')" title="Excluir">🗑</div>
+            </div>
+          </div>
+        </div>`).join('')}
+        ${cl.length===0 ? '<div class="empty-k">📭<br>Sem leads</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLeadsList(leads) {
+  const tbody = document.getElementById('leads-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = leads.map(l => `<tr>
+    <td><strong>${l.nome}</strong></td>
+    <td><a href="tel:${l.telefone}" style="color:var(--orange);text-decoration:none">${l.telefone||'—'}</a></td>
+    <td><span class="tag ${INT_C[l.interesse]||'tc'}">${INT_L[l.interesse]||l.interesse}</span></td>
+    <td>${l.tipo_imovel||'—'}</td>
+    <td style="color:var(--orange)">${l.valor||'—'}</td>
+    <td><span class="ob ${ORI_C[l.origem]||''}">${l.origem||'—'}</span></td>
+    <td>${l.corretor||'—'}</td>
+    <td><span style="font-size:10px;padding:3px 7px;border-radius:7px;background:var(--navy-dark);border:1px solid var(--border)">${l.status}</span></td>
+    <td><div style="display:flex;gap:3px">
+      <div class="kbtn" onclick="openWhatsAppDirect('${l.telefone||''}')">💬</div>
+      <div class="kbtn" onclick="deleteLead('${l.id}','${l.nome}')">🗑</div>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ═══ IMÓVEIS ═══
+const IM_EMOJI = {Apartamento:'🏢',Casa:'🏡',Kitnet:'🏠',Terreno:'🌿',Comercial:'🏪'};
+function renderImoveis(imoveis) {
+  const grid = document.getElementById('imoveis-grid');
+  if(!grid) return;
+  const sc = {Disponível:'std',Reservado:'str',Vendido:'stv'};
+  grid.innerHTML = imoveis.length > 0
+    ? imoveis.map(im => `<div class="im-card">
+        <div class="im-img">${IM_EMOJI[im.tipo]||'🏠'}<div class="im-st ${sc[im.status]||'std'}">${im.status}</div></div>
+        <div class="im-body">
+          <div class="im-name">${im.nome}</div>
+          <div class="im-loc">📍 ${im.bairro||'—'}, ${im.cidade||'—'}</div>
+          <div class="im-price">${im.valor||'—'}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:3px">Entrada: ${im.entrada||'—'}</div>
+          <div class="im-dets">
+            ${im.quartos?`<span>🛏 ${im.quartos}</span>`:''}
+            ${im.banheiros?`<span>🚿 ${im.banheiros}</span>`:''}
+            ${im.garagem?`<span>🚗 ${im.garagem}</span>`:''}
+            ${im.metragem?`<span>📐 ${im.metragem}</span>`:''}
+          </div>
+          <div style="margin-top:7px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:10px;color:var(--text3)">${im.construtora||''}</span>
+            <div class="kbtn" onclick="deleteImovel('${im.id}','${im.nome}')">🗑</div>
+          </div>
+        </div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:48px;color:var(--text3)"><div style="font-size:40px;margin-bottom:12px">🏠</div><div>Nenhum imóvel cadastrado ainda</div><div style="font-size:12px;margin-top:8px">Clique em "+ Novo Imóvel" para começar</div></div>';
+}
+
+// ═══ CORRETORES ═══
+function renderCorretores(corretores) {
+  const grid = document.getElementById('corr-grid');
+  if(!grid) return;
+  const leadsCount = (nome) => allLeads.filter(l => l.corretor === nome).length;
+  const vendasCount = (nome) => allLeads.filter(l => l.corretor === nome && l.status === 'Fechado').length;
+  grid.innerHTML = corretores.length > 0
+    ? corretores.map(c => {
+        const leads = leadsCount(c.nome), vendas = vendasCount(c.nome);
+        const conv = leads > 0 ? ((vendas/leads)*100).toFixed(0) : 0;
+        const meta = c.meta_mensal > 0 ? Math.min((vendas * 50000 / c.meta_mensal * 100), 100).toFixed(0) : 0;
+        return `<div class="corr-card">
+          <div class="corr-av">${c.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+          <div class="corr-nm">${c.nome}</div>
+          <div class="corr-role">${c.cargo||'Corretor'}</div>
+          <div class="cs-grid">
+            <div class="cs"><div class="cs-val">${leads}</div><div class="cs-lbl">Leads</div></div>
+            <div class="cs"><div class="cs-val">${vendas}</div><div class="cs-lbl">Vendas</div></div>
+            <div class="cs"><div class="cs-val" style="color:var(--orange)">${conv}%</div><div class="cs-lbl">Conv.</div></div>
+          </div>
+          <div class="mbw"><div class="mb" style="width:${meta}%"></div></div>
+          <div style="font-size:10px;color:var(--text3)">${meta}% da meta</div>
+          <div style="margin-top:8px"><div class="kbtn" style="width:auto;padding:0 8px;height:22px" onclick="deleteCorretor('${c.id}','${c.nome}')">🗑 Remover</div></div>
+        </div>`;
+      }).join('')
+    : '<div style="text-align:center;padding:48px;color:var(--text3);grid-column:1/-1"><div style="font-size:40px;margin-bottom:12px">👥</div><div>Nenhum corretor cadastrado</div><div style="font-size:12px;margin-top:8px">Clique em "+ Novo Corretor" para começar</div></div>';
+}
+
+// ═══ WHATSAPP ═══
+function renderWppContacts(leads) {
+  const list = document.getElementById('wpp-list');
+  if(!list) return;
+  const withPhone = leads.filter(l => l.telefone).slice(0, 20);
+  list.innerHTML = withPhone.map(l => `
+    <div class="wpp-c" onclick="selectWpp('${l.id}',this)">
+      <div class="wpp-cav">${l.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${l.nome}</div>
+        <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.status} · ${l.telefone}</div>
+      </div>
+    </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Nenhum lead com telefone</div>';
+}
+
+function selectWpp(id, el) {
+  document.querySelectorAll('.wpp-c').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  currentWppLead = allLeads.find(l => l.id === id);
+  if(currentWppLead) {
+    document.getElementById('wpp-nm').textContent = currentWppLead.nome;
+    document.getElementById('wpp-av').textContent = currentWppLead.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('wpp-msgs').innerHTML = `<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Telefone: <strong style="color:var(--orange)">${currentWppLead.telefone}</strong><br><br>Use os templates abaixo ou digite uma mensagem</div>`;
+  }
+}
+
+function openWhatsApp() {
+  if(currentWppLead && currentWppLead.telefone) {
+    const num = currentWppLead.telefone.replace(/\D/g,'');
+    window.open(`https://wa.me/55${num}`, '_blank');
+  } else showToast('Selecione um lead primeiro!', 'error');
+}
+
+function openWhatsAppDirect(tel) {
+  if(tel) { const num = tel.replace(/\D/g,''); window.open(`https://wa.me/55${num}`, '_blank'); }
+  else showToast('Lead sem telefone cadastrado!', 'error');
+}
+
+function sendWpp() {
+  const input = document.getElementById('wpp-input');
+  if(!input.value.trim()) return;
+  if(currentWppLead && currentWppLead.telefone) {
+    const num = currentWppLead.telefone.replace(/\D/g,'');
+    const msg = encodeURIComponent(input.value);
+    window.open(`https://wa.me/55${num}?text=${msg}`, '_blank');
+    input.value = '';
+    showToast('Abrindo WhatsApp...', 'success');
+  } else {
+    showToast('Selecione um lead com telefone!', 'error');
+  }
+}
+
+function useTemplate(text) { const i = document.getElementById('wpp-input'); i.value = text; i.focus(); }
+
+// ═══ SAVE LEAD ═══
+async function saveLead() {
+  const nome = document.getElementById('new-nome').value.trim();
+  if(!nome) { showToast('Preencha o nome!', 'error'); return; }
+  const btn = document.getElementById('btn-save-lead');
+  btn.innerHTML = '<span class="spin"></span> Salvando...'; btn.disabled = true;
+  try {
+    const { error } = await db.from('leads').insert([{
+      nome, telefone: document.getElementById('new-tel').value,
+      email: document.getElementById('new-email').value,
+      interesse: document.getElementById('new-int').value,
+      tipo_imovel: document.getElementById('new-tipo').value,
+      valor: document.getElementById('new-valor').value,
+      bairro: document.getElementById('new-bairro').value,
+      origem: document.getElementById('new-origem').value,
+      corretor: document.getElementById('new-corr').value,
+      status: 'Lead Novo',
+      observacoes: document.getElementById('new-obs').value,
+    }]);
+    if(error) throw error;
+    closeModal('add-lead');
+    showToast(`✅ Lead "${nome}" salvo no Supabase!`, 'success');
+    document.getElementById('new-nome').value = '';
+    document.getElementById('new-tel').value = '';
+    document.getElementById('new-obs').value = '';
+    await loadAll();
+  } catch(e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+  btn.innerHTML = 'Salvar no Supabase'; btn.disabled = false;
+}
+
+// ═══ SAVE IMÓVEL ═══
+async function saveImovel() {
+  const nome = document.getElementById('im-nome').value.trim();
+  if(!nome) { showToast('Preencha o nome!', 'error'); return; }
+  const btn = document.getElementById('btn-save-im');
+  btn.innerHTML = '<span class="spin"></span> Salvando...'; btn.disabled = true;
+  try {
+    const { error } = await db.from('imoveis').insert([{
+      nome, tipo: document.getElementById('im-tipo').value,
+      bairro: document.getElementById('im-bairro').value,
+      cidade: document.getElementById('im-cidade').value,
+      valor: document.getElementById('im-valor').value,
+      entrada: document.getElementById('im-entrada').value,
+      quartos: parseInt(document.getElementById('im-quartos').value)||0,
+      banheiros: parseInt(document.getElementById('im-banheiros').value)||0,
+      garagem: parseInt(document.getElementById('im-garagem').value)||0,
+      metragem: document.getElementById('im-metragem').value,
+      construtora: document.getElementById('im-const').value,
+      status: document.getElementById('im-status').value,
+    }]);
+    if(error) throw error;
+    closeModal('add-imovel');
+    showToast(`✅ Imóvel "${nome}" salvo!`, 'success');
+    await loadAll();
+  } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+  btn.innerHTML = 'Salvar no Supabase'; btn.disabled = false;
+}
+
+// ═══ SAVE CORRETOR ═══
+async function saveCorretor() {
+  const nome = document.getElementById('co-nome').value.trim();
+  if(!nome) { showToast('Preencha o nome!', 'error'); return; }
+  const btn = document.getElementById('btn-save-co');
+  btn.innerHTML = '<span class="spin"></span> Salvando...'; btn.disabled = true;
+  try {
+    const { error } = await db.from('corretores').insert([{
+      nome, cargo: document.getElementById('co-cargo').value,
+      telefone: document.getElementById('co-tel').value,
+      email: document.getElementById('co-email').value,
+      meta_mensal: parseFloat(document.getElementById('co-meta').value)||0,
+    }]);
+    if(error) throw error;
+    closeModal('add-corretor');
+    showToast(`✅ Corretor "${nome}" salvo!`, 'success');
+    await loadAll();
+  } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+  btn.innerHTML = 'Salvar no Supabase'; btn.disabled = false;
+}
+
+// ═══ DELETE ═══
+async function deleteLead(id, nome) {
+  if(!confirm(`Excluir lead "${nome}"?`)) return;
+  const { error } = await db.from('leads').delete().eq('id', id);
+  if(error) showToast('Erro: ' + error.message, 'error');
+  else { showToast(`Lead "${nome}" excluído`, 'success'); await loadAll(); }
+}
+async function deleteImovel(id, nome) {
+  if(!confirm(`Excluir imóvel "${nome}"?`)) return;
+  const { error } = await db.from('imoveis').delete().eq('id', id);
+  if(error) showToast('Erro: ' + error.message, 'error');
+  else { showToast(`Imóvel "${nome}" excluído`, 'success'); await loadAll(); }
+}
+async function deleteCorretor(id, nome) {
+  if(!confirm(`Excluir corretor "${nome}"?`)) return;
+  const { error } = await db.from('corretores').delete().eq('id', id);
+  if(error) showToast('Erro: ' + error.message, 'error');
+  else { showToast(`Corretor "${nome}" excluído`, 'success'); await loadAll(); }
+}
+
+// ═══ CHANGE STATUS ═══
+async function changeStatus(id) {
+  const lead = allLeads.find(l => l.id === id);
+  if(!lead) return;
+  const idx = COLS.indexOf(lead.status);
+  const next = COLS[(idx + 1) % COLS.length];
+  const { error } = await db.from('leads').update({ status: next }).eq('id', id);
+  if(error) showToast('Erro: ' + error.message, 'error');
+  else { showToast(`Status → ${next}`, 'success'); await loadAll(); }
+}
+
+// ═══ FILTER ═══
+function filterLeads() {
+  const q = document.getElementById('search-lead').value.toLowerCase();
+  const corr = document.getElementById('filter-corr').value;
+  const status = document.getElementById('filter-status').value;
+  const filtered = allLeads.filter(l => {
+    const matchQ = !q || l.nome.toLowerCase().includes(q) || (l.telefone||'').includes(q) || (l.bairro||'').toLowerCase().includes(q);
+    const matchC = !corr || l.corretor === corr;
+    const matchS = !status || l.status === status;
+    return matchQ && matchC && matchS;
+  });
+  renderKanban(filtered);
+  renderLeadsList(filtered);
+}
+
+function updateCorretorFilter() {
+  const sel = document.getElementById('filter-corr');
+  if(!sel) return;
+  const corrs = [...new Set(allLeads.map(l => l.corretor).filter(Boolean))];
+  sel.innerHTML = '<option value="">Todos corretores</option>' + corrs.map(c => `<option>${c}</option>`).join('');
+}
+
+function updateBadges() {
+  const b = document.getElementById('badge-leads');
+  if(b) b.textContent = allLeads.length;
+}
+
+// ═══ RELATORIO ═══
+function renderRelatorio(leads) {
+  const tbody = document.getElementById('rel-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = leads.map(l => `<tr>
+    <td><strong>${l.nome}</strong></td>
+    <td>${l.telefone||'—'}</td>
+    <td>${l.tipo_imovel||'—'}</td>
+    <td style="color:var(--orange)">${l.valor||'—'}</td>
+    <td>${l.origem||'—'}</td>
+    <td>${l.corretor||'—'}</td>
+    <td><span style="font-size:10px;padding:3px 7px;border-radius:7px;background:var(--navy-dark);border:1px solid var(--border)">${l.status}</span></td>
+    <td><span class="tag ${INT_C[l.interesse]||'tc'}">${INT_L[l.interesse]||'—'}</span></td>
+  </tr>`).join('');
+}
+
+// ═══ CALENDAR ═══
+let calDate = new Date();
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid'), title = document.getElementById('cal-title');
+  if(!grid) return;
+  const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  title.textContent = `${months[calDate.getMonth()]} ${calDate.getFullYear()}`;
+  const first = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay();
+  const dim = new Date(calDate.getFullYear(), calDate.getMonth()+1, 0).getDate();
+  const prev = new Date(calDate.getFullYear(), calDate.getMonth(), 0).getDate();
+  grid.innerHTML = '';
+  const today = new Date();
+  for(let i=0;i<first;i++){const d=document.createElement('div');d.className='cal-day oth';d.textContent=prev-first+1+i;grid.appendChild(d);}
+  for(let d=1;d<=dim;d++){
+    const el=document.createElement('div');el.className='cal-day';
+    if(d===today.getDate()&&calDate.getMonth()===today.getMonth()&&calDate.getFullYear()===today.getFullYear())el.classList.add('today');
+    el.textContent=d;
+    el.onclick=()=>showToast(`Dia ${d}/${calDate.getMonth()+1} selecionado`,'info');
+    grid.appendChild(el);
+  }
+}
+function prevMonth(){calDate.setMonth(calDate.getMonth()-1);renderCalendar();}
+function nextMonth(){calDate.setMonth(calDate.getMonth()+1);renderCalendar();}
+function renderEvents() {
+  const el = document.getElementById('events-list');
+  if(!el) return;
+  const visitas = allLeads.filter(l => l.status === 'Visita Marcada').slice(0, 5);
+  el.innerHTML = visitas.length > 0
+    ? visitas.map(l => `<div class="evi">
+        <div style="display:flex;flex-direction:column;align-items:center;min-width:44px">
+          <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700">Visita</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center"><div class="ev-dot" style="background:var(--orange)"></div><div class="ev-line"></div></div>
+        <div>
+          <div class="ev-title">${l.nome}</div>
+          <div class="ev-sub">${l.bairro||'—'} · ${l.corretor||'—'}</div>
+          <span class="ev-badge" style="background:rgba(244,122,58,.2);color:var(--orange)">Visita Marcada</span>
+        </div>
+      </div>`).join('')
+    : '<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Nenhuma visita marcada</div>';
+}
+
+// ═══ NAVIGATION ═══
+function goTo(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const p = document.getElementById('page-'+page); if(p) p.classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard',leads:'Gestão de Leads',whatsapp:'Central WhatsApp',imoveis:'Imóveis',corretores:'Corretores & Equipe',agenda:'Agenda',relatorios:'Relatórios',config:'Configurações'};
+  document.getElementById('page-title').textContent = titles[page]||page;
+  const primBtns = {leads:'+ Novo Lead',imoveis:'+ Novo Imóvel',corretores:'+ Novo Corretor',agenda:'+ Novo Evento',dashboard:'+ Novo Lead',relatorios:'Exportar',config:'Salvar',whatsapp:'Novo Contato'};
+  const primActions = {leads:()=>openModal('add-lead'),imoveis:()=>openModal('add-imovel'),corretores:()=>openModal('add-corretor')};
+  const btn = document.getElementById('topbar-primary');
+  btn.textContent = primBtns[page]||'+ Novo';
+  btn.onclick = primActions[page] || (() => openModal('add-lead'));
+  if(page==='relatorios'){renderRelatorio(allLeads);setTimeout(initRelCharts,100);}
+  if(page==='agenda'){renderCalendar();renderEvents();}
+  if(page==='whatsapp'){renderWppContacts(allLeads);}
+  if(window.innerWidth<=768)document.getElementById('sidebar').classList.remove('open');
+}
+
+// ═══ MODAL ═══
+function openModal(id){document.getElementById('modal-'+id).classList.add('open');}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
+
+// ═══ VIEW TOGGLE ═══
+function setView(v, el) {
+  document.querySelectorAll('.vb').forEach(b => b.classList.remove('active')); el.classList.add('active');
+  document.getElementById('leads-kanban').style.display = v==='kanban'?'block':'none';
+  document.getElementById('leads-lista').style.display = v==='lista'?'block':'none';
+}
+
+// ═══ TOAST ═══
+function showToast(msg, type='success') {
+  const wrap = document.getElementById('toast-wrap');
+  const icons = {success:'✅',error:'❌',info:'ℹ️'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ═══ INIT ═══
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const ld = document.getElementById('loading');
+    ld.style.opacity = '0'; ld.style.transition = 'opacity .5s';
+    setTimeout(() => ld.style.display = 'none', 500);
+  }, 1800);
+});
+document.addEventListener('click', e => {
+  if(e.target.classList.contains('modal-ov')) e.target.classList.remove('open');
+});
+</script>
+</body>
+</html>
