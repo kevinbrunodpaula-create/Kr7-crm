@@ -1000,34 +1000,30 @@ function useTemplate(text) { const i = document.getElementById('wpp-input'); i.v
 
 // ═══ SAVE LEAD ═══
 async function saveLead() {
-  const nome = document.getElementById('new-nome').value.trim();
-  if(!nome) { showToast('Preencha o nome!', 'error'); return; }
-  const btn = document.getElementById('btn-save-lead');
-  btn.innerHTML = '<span class="spin"></span> Salvando...'; btn.disabled = true;
-  try {
-    const { error } = await db.from('leads').insert([{
-      nome, telefone: document.getElementById('new-tel').value,
-      email: document.getElementById('new-email').value,
-      interesse: document.getElementById('new-int').value,
-      tipo_imovel: document.getElementById('new-tipo').value,
-      valor: document.getElementById('new-valor').value,
-      bairro: document.getElementById('new-bairro').value,
-      origem: document.getElementById('new-origem').value,
-      corretor: document.getElementById('new-corr').value,
-      status: 'Lead Novo',
-      observacoes: document.getElementById('new-obs').value,
-    }]);
-    if(error) throw error;
-    closeModal('add-lead');
-    showToast(`✅ Lead "${nome}" salvo no Supabase!`, 'success');
-    document.getElementById('new-nome').value = '';
-    document.getElementById('new-tel').value = '';
-    document.getElementById('new-obs').value = '';
-    await loadAll();
-  } catch(e) {
-    showToast('Erro: ' + e.message, 'error');
+  const lead = {
+    nome: document.getElementById('new-nome').value,
+    telefone: document.getElementById('new-tel').value,
+    email: document.getElementById('new-email').value,
+    user_id: currentUser?.id || null
+  };
+
+  if (editingLeadId) {
+    await supabase
+      .from('leads')
+      .update(lead)
+      .eq('id', editingLeadId);
+
+    alert('Lead atualizado!');
+    editingLeadId = null;
+  } else {
+    await supabase
+      .from('leads')
+      .insert(lead);
+
+    alert('Lead criado!');
   }
-  btn.innerHTML = 'Salvar no Supabase'; btn.disabled = false;
+
+  loadAll();
 }
 
 // ═══ SAVE IMÓVEL ═══
