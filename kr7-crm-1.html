@@ -1246,7 +1246,19 @@ window.addEventListener('load', () => {
 });
 document.addEventListener('click', e => {
   if(e.target.classList.contains('modal-ov')) e.target.classList.remove('open');
-});
+});let editingLeadId = null;
+let currentUser = null;
+
+async function initUser() {
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    alert('Faça login primeiro');
+    return;
+  }
+
+  currentUser = data.user;
+}
 </script>
 </body>
 </html>
