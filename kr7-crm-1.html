@@ -440,7 +440,7 @@ body{font-family:'Inter',sans-serif;background:var(--navy-deep);color:var(--text
       <div id="leads-kanban"><div class="kanban-wrap" id="kanban-board"></div></div>
       <div id="leads-lista" style="display:none"><div class="tw2"><table class="ltable"><thead><tr><th>Nome</th><th>Telefone</th><th>Interesse</th><th>Tipo</th><th>Valor</th><th>Origem</th><th>Corretor</th><th>Status</th><th>Ações</th></tr></thead><tbody id="leads-tbody"></tbody></table></div></div>
     </div>
-<button onclick="editLead(1)">TESTAR EDIT</button>
+
     <!-- WHATSAPP -->
     <div class="page" id="page-whatsapp">
       <div class="wpp-grid">
@@ -1000,30 +1000,34 @@ function useTemplate(text) { const i = document.getElementById('wpp-input'); i.v
 
 // ═══ SAVE LEAD ═══
 async function saveLead() {
-  const lead = {
-    nome: document.getElementById('new-nome').value,
-    telefone: document.getElementById('new-tel').value,
-    email: document.getElementById('new-email').value,
-    user_id: currentUser?.id || null
-  };
-
-  if (editingLeadId) {
-    await supabase
-      .from('leads')
-      .update(lead)
-      .eq('id', editingLeadId);
-
-    alert('Lead atualizado!');
-    editingLeadId = null;
-  } else {
-    await supabase
-      .from('leads')
-      .insert(lead);
-
-    alert('Lead criado!');
+  const nome = document.getElementById('new-nome').value.trim();
+  if(!nome) { showToast('Preencha o nome!', 'error'); return; }
+  const btn = document.getElementById('btn-save-lead');
+  btn.innerHTML = '<span class="spin"></span> Salvando...'; btn.disabled = true;
+  try {
+    const { error } = await db.from('leads').insert([{
+      nome, telefone: document.getElementById('new-tel').value,
+      email: document.getElementById('new-email').value,
+      interesse: document.getElementById('new-int').value,
+      tipo_imovel: document.getElementById('new-tipo').value,
+      valor: document.getElementById('new-valor').value,
+      bairro: document.getElementById('new-bairro').value,
+      origem: document.getElementById('new-origem').value,
+      corretor: document.getElementById('new-corr').value,
+      status: 'Lead Novo',
+      observacoes: document.getElementById('new-obs').value,
+    }]);
+    if(error) throw error;
+    closeModal('add-lead');
+    showToast(`✅ Lead "${nome}" salvo no Supabase!`, 'success');
+    document.getElementById('new-nome').value = '';
+    document.getElementById('new-tel').value = '';
+    document.getElementById('new-obs').value = '';
+    await loadAll();
+  } catch(e) {
+    showToast('Erro: ' + e.message, 'error');
   }
-
-  loadAll();
+  btn.innerHTML = 'Salvar no Supabase'; btn.disabled = false;
 }
 
 // ═══ SAVE IMÓVEL ═══
@@ -1242,33 +1246,7 @@ window.addEventListener('load', () => {
 });
 document.addEventListener('click', e => {
   if(e.target.classList.contains('modal-ov')) e.target.classList.remove('open');
-});let editingLeadId = null;
-let currentUser = null;
-
-async function initUser() {
-  const { data } = await supabase.auth.getUser();
-
-  if (!data.user) {
-    alert('Faça login primeiro');
-    return;
-  }
-
-  currentUser = data.user;
-}async function editLead(id) {
-  const { data } = await supabase
-    .from('leads')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  document.getElementById('new-nome').value = data.nome;
-  document.getElementById('new-tel').value = data.telefone;
-  document.getElementById('new-email').value = data.email;
-
-  editingLeadId = id;
-
-  openModal('add-lead');
-}
+});
 </script>
 </body>
 </html>
