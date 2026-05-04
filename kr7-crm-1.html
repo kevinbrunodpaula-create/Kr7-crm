@@ -1258,6 +1258,20 @@ async function initUser() {
   }
 
   currentUser = data.user;
+}async function editLead(id) {
+  const { data } = await supabase
+    .from('leads')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  document.getElementById('new-nome').value = data.nome;
+  document.getElementById('new-tel').value = data.telefone;
+  document.getElementById('new-email').value = data.email;
+
+  editingLeadId = id;
+
+  openModal('add-lead');
 }
 </script>
 </body>
